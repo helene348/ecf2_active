@@ -66,3 +66,21 @@ where extract(year from age("CONTRATDATEDEBUT")) >= 5 and "CONTRATDATEFIN" is nu
 
 --Requête de mise à jour 2:
 -- supprimer les projet terminés qui n'ont pas eu d'étapes associées
+
+-- ajout d'un projet terminé sans étapes:
+insert into "PROJET" values (default, 3, 2, 1, 
+'Jeu video pour etre un bon citoyen de Lavanville', 'jeu citoyen mairie', 'complet', '3', '1500',
+ 'Duree estimee a 1500 heures', NULL, NULL, NULL, '24/03/2018', '30/11/2018', 'Forfait',
+  8000, '25/03/2018'); 
+
+-- affichage des projets:
+select "PROJETID" as id, "PROJETCOURT" as nom_projet,"PROJETDEBUTREEL" as date_debut,
+"PROJETFINREELLE" as date_fin from "PROJET";
+
+-- suppression des projets terminés sans étapes:
+select p."PROJETID" from "PROJET" p 
+left join "ETAPE" e on p."PROJETID" = e."PROJETID" where e."PROJETID" is null; 
+
+delete from "PROJET" where "PROJETID" in (select p."PROJETID" from "PROJET" p 
+left join "ETAPE" e on p."PROJETID" = e."PROJETID" where e."PROJETID" is null);
+
