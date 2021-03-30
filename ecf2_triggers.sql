@@ -86,22 +86,31 @@ update "CONTRAT" set "CONTRATTYPE" = 'Stagiaire' where "CONTRATID" = 7;
 
 -- affichage des projets avec les dates debut/fin reelles:
 select "PROJETID" as id, "PROJETCOURT" as nom_projet,"PROJETDEBUTREEL" as date_debut,
-"PROJETFINREELLE" as date_fin from "PROJET";
+"PROJETFINREELLE" as date_fin, date_part('year', age("PROJETFINREELLE")) as annees, 
+date_part('month', age("PROJETFINREELLE")) as mois from "PROJET" order by "PROJETID" asc;
 
 -- function et trigger:
 CREATE FUNCTION check_fin_projet() returns trigger as $trigger_suppression_projet$
     begin
-        if now() - old."DATEFINREELLE" > 2 months
-            delete ;
+        if date_part('month', age(old."PROJETFINREELLE")) <= 2 and date_part('year', age(old."PROJETFINREELLE")) = 0 then
+            raise exception 'On ne peut pas supprimer un projet qui n est pas fini depuis plus de 2 mois';
         else 
-            return new;
+            return old;
         end if;
     end;
 $trigger_suppression_projet$ language plpgsql
 
+drop function check_fin_projet(); 
 
 create trigger trigger_suppression_projet
-    BEFORE DELETE
+    BEFORE delete
     ON "PROJET"
     FOR EACH ROW
     EXECUTE PROCEDURE check_fin_projet();
+
+drop trigger trigger_suppression_projet on "PROJET";    
+
+delete from "PROJET" where "PROJETFINREELLE" is not null; -- ne marche pas
+delete from "PROJET" where "PROJETID" = 1;
+delete from "PROJET" where "PROJETID" = 2;
+delete from "PROJET" where "PROJETID" = 12;
